@@ -1,1 +1,4 @@
-$version = '0.1.1'
+module Ed2k
+  # version
+  VERSION = '0.2'
+end

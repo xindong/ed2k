@@ -19,10 +19,10 @@ opts = OptionParser.new do |o|
     exit
   end
   o.on_tail('-v', '--version', "Show version") do
-    puts $version
+    puts Ed2k::VERSION
     exit
   end
-  
+
 end
 
 begin
@@ -34,6 +34,10 @@ rescue OptionParser::InvalidOption
   exit
 end
 
-def debuging?
-  $options[:debug]
+module Ed2k
+
+  def debuging?
+    $options[:debug]
+  end
+  
 end

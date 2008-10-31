@@ -1,11 +1,13 @@
-require File.dirname(__FILE__).'/spec/version.rb'
+require File.dirname(__FILE__) + '/spec/version.rb'
 
 Gem::Specification.new do |s|
   s.name = 'ed2k'
-  s.version = $version
-  s.platform = Gem::Platform::Ruby
+  s.author = 'xdanger'
+  s.email = 'xdanger@gmail.com'
+  s.version = Ed2k::VERSION
+  s.platform = 'ruby'
   s.summary = 'Hash files and generate metadata to build their ed2ks'
-  s.requirepath = ['lib']
+  s.require_paths = ['lib']
   s.files = Dir['lib/**/*.rb'] + Dir['bin/*']
   s.files << Dir['[A-Z]*'] + Dir['test/**/*']
   s.files.reject! { |fn| fn.include? ".git" }
@@ -13,9 +15,9 @@ Gem::Specification.new do |s|
   
   s.bindir = 'bin'
   s.executables = ['ed2k-hash', 'ed2k-hashfile']
-  spec.extra_rdoc_files = ["README.rdoc", "LICENSE", "THANKS"]
+  s.extra_rdoc_files = ["README.rdoc", "LICENSE", "THANKS"]
 #  s.autorequire = 'rake'
-  spec.has_rdoc = true
-  spec.hompage = 'http://www.verycd.com/'
+  s.has_rdoc = true
+  s.homepage = 'http://www.verycd.com/'
   s.date = Time.now
 end
