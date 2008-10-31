@@ -23,7 +23,7 @@
 # THE SOFTWARE.
 
 require 'openssl'
-require 'CGI'
+require 'cgi'
 include Ed2k
 
 module Ed2k
