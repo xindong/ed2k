@@ -1,7 +1,7 @@
 require File.dirname(__FILE__).'/spec/version.rb'
 
 Gem::Specification.new do |s|
-  s.name = 'ed2khash'
+  s.name = 'ed2k'
   s.version = $version
   s.platform = Gem::Platform::Ruby
   s.summary = 'Hash files and generate metadata to build their ed2ks'
