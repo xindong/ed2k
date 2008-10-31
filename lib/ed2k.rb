@@ -23,6 +23,7 @@
 # THE SOFTWARE.
 
 require 'openssl'
+require 'CGI'
 include Ed2k
 
 module Ed2k
@@ -40,15 +41,6 @@ module Ed2k
       offset += BLOCK_BYTES
     end
     return OpenSSL::Digest::MD4.hexdigest(digests.join)
-    # hash = OpenSSL::Digest::MD4.hexdigest(digests.join)
-    # if hash.length is larger than BLOCK_BYTES .......
-    # in eMule, BLOCK_BYTES = 9728000, 
-    # then a file larger than 2957312000000 bytes (3TB) will cause the following happens
-    # if BLOCK_BYTES = 1024000, then the line will be 32768000000 (3GB)
-    # while hash.length > BLOCK_BYTES
-    #  hash = hash(hash)
-    # end
-    # hash
   end
   
   # hash a file using IO.read function
@@ -66,7 +58,7 @@ module Ed2k
       digests << OpenSSL::Digest::MD4.digest(block)
       if debuging?
         md4 = OpenSSL::Digest::MD4.hexdigest(block)
-        puts "Block md4: #{md4} (offset: #{offset})"
+        p "Block md4: #{md4} (offset: #{offset})"
         puts "Block counts: #{digests.length}"
       end
       offset += BLOCK_BYTES

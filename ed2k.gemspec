@@ -10,12 +10,12 @@ Gem::Specification.new do |s|
   s.require_paths = ['bin', 'lib', 'spec']
   s.files = Dir['bin/*'] + Dir['lib/**/*.rb'] + Dir['spec/*.rb']
   s.files << Dir['[A-Z]*'] + Dir['test/**/*']
-  s.files.reject! { |fn| fn.include? ".git" }
+  s.files.reject! { |fn| fn.include? '.git' }
 #  s.add_dependency('openssl')
   
   s.bindir = 'bin'
-  s.executables = ['ed2k-hash', 'ed2k-hashfile']
-  s.extra_rdoc_files = ["README.rdoc", "LICENSE", "THANKS"]
+  s.executables = ['ed2k']
+  s.extra_rdoc_files = ['README.rdoc', 'LICENSE', 'THANKS']
 #  s.autorequire = 'rake'
   s.has_rdoc = true
   s.homepage = 'http://www.verycd.com/'
