@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version = Ed2k::VERSION
   s.platform = 'ruby'
   s.summary = 'Hash files and generate metadata to build their ed2ks'
-  s.require_paths = ['lib']
+  s.require_paths = ['bin', 'lib', 'spec']
   s.files = Dir['lib/**/*.rb'] + Dir['bin/*']
   s.files << Dir['[A-Z]*'] + Dir['test/**/*']
   s.files.reject! { |fn| fn.include? ".git" }
