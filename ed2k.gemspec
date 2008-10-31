@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.files = Dir['lib/**/*.rb'] + Dir['bin/*']
   s.files << Dir['[A-Z]*'] + Dir['test/**/*']
   s.files.reject! { |fn| fn.include? ".git" }
-  s.add_dependency('openssl')
+#  s.add_dependency('openssl')
   
   s.bindir = 'bin'
   s.executables = ['ed2k-hash', 'ed2k-hashfile']
