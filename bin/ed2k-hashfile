@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+$: << File.expand_path(File.join(File.basename(__FILE__), '../lib'))
+
+require 'args_parser'
+require 'ed2k'
+
+puts Ed2k.hash_file($options[:file])
