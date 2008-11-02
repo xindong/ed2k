@@ -17,18 +17,19 @@ def invalid_args(msg)
   exit
 end
 
-$options = { :action => nil, :file => nil, :debug => false }
+$options = { :action => nil, :file => nil, :upcase => false, :debug => false }
 
 $opts = OptionParser.new do |o|
   o.banner  = "ed2k version #{Ed2k::VERSION}\n"
   o.banner += "Copyright MIT license by <xdanger@gmail.com>\n\n"
   o.banner += "Usage: ed2k -a hash -f FILENAME\n"
-  o.banner += "  or   ed2k -a aich -f FILENAME (currently no available -_-)\n"
+  o.banner += "  or   ed2k -a aich -f FILENAME\n"
   o.banner += "  or   ed2k -a link -f FILENAME\n"
   o.separator "\nCommon options:"
   o.on('-a', '--action [ACTION]', [:hash, :aich, :link],
        'Set action (hash, aich, link)') { |a| $options[:action] = a }
   o.on('-f', '--file [FILE]', 'File to process') { |f| $options[:file] = f }
+  o.on('-u', '--upcase', 'Return value is upcased') { $options[:upcase] = true }
   o.separator "\nSpecific options:"
   o.on_tail('-d', '--debug', 'Turn on debug mode') { $options[:debug] = true }
   o.on_tail('-h', '--help', "Display detailed help and exit") { puts o; exit }

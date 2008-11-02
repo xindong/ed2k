@@ -5,9 +5,24 @@ $: << File.expand_path(File.join(File.basename(__FILE__), '../lib'))
 require 'args_parser'
 require 'ed2k'
 
-case $options[:action]
-when :hash
-  puts Ed2k.hash_file($options[:file])
-when :link
-  puts Ed2k.build_ed2k($options[:file])
+def main
+  case $options[:action]
+  when :hash
+    puts Ed2k.hash_file($options[:file], :upcase => $options[:upcase])
+  when :aich
+    puts Ed2k.aich_file($options[:file], :upcase => $options[:upcase])
+  when :link
+    puts Ed2k.build_ed2k($options[:file], :upcase => $options[:upcase])
+  end
+end
+
+unless Ed2k.debuging?
+  begin
+    main
+  rescue
+    $stderr.puts $!
+    exit 1
+  end
+else
+  main
 end
