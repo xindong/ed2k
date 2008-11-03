@@ -1,14 +1,6 @@
 require 'optparse'
 require File.expand_path(File.dirname(__FILE__)) + '/../spec/version.rb'
-
-module Ed2k
-  
-  # is debuging model?
-  def debuging?
-    $options[:debug]
-  end
-    
-end
+require File.expand_path(File.dirname(__FILE__)) + '/ed2k/debug.rb'
 
 # inputed invalid args, puts msg and halt
 def invalid_args(msg)

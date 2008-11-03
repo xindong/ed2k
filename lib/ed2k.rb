@@ -26,7 +26,6 @@ require 'pp'
 require 'digest'
 require 'openssl'
 require 'cgi'
-include Ed2k
 
 module Ed2k
   
@@ -42,13 +41,16 @@ module Ed2k
   def Ed2k.hash(*args)
     str = args[0]
     return '' if str.length == 0
-    return OpenSSL::Digest::MD4.hexdigest(str) if str.length <= PART_BLOCK_BYTES
-    hash_sets = []; offset = 0
-    while offset < str.length
-      hash_sets << OpenSSL::Digest::MD4.digest(str[offset, PART_BLOCK_BYTES])
-      offset += PART_BLOCK_BYTES
+    hash = ''
+    if str.length < Ed2k::PART_BLOCK_BYTES
+      hash = OpenSSL::Digest::MD4.hexdigest(str)
+    else
+      hash_sets = []
+      Ed2k.walk_string(str, Ed2k::PART_BLOCK_BYTES) do |block|
+        hash_sets << OpenSSL::Digest::MD4.digest(block)
+      end
+      hash = OpenSSL::Digest::MD4.hexdigest(hash_sets.join)
     end
-    hash = OpenSSL::Digest::MD4.hexdigest(hash_sets.join)
     return hash.upcase if args[1].has_key? :upcase and args[:upcase]
     return hash
   end
@@ -56,27 +58,20 @@ module Ed2k
   # hash a file using IO.read function
   def Ed2k.hash_file(*args)
     file = args[0]
-    raise ArgumentError, "file does not exists" unless File.exists?(file)
+    raise ArgumentError, "File does not exists" unless File.exists?(file)
     bytes = File.size(file)
-    puts "File size is #{bytes}" if debuging?
-    if bytes <= PART_BLOCK_BYTES
+    puts "File size is #{bytes}" if Ed2k.debuging?
+    hash = ''
+    if File.size(file) < Ed2k::PART_BLOCK_BYTES
       hash = OpenSSL::Digest::MD4.hexdigest(File.read(file))
-      return hash.upcase if args[1].has_key? :upcase and args[1][:upcase]
-      return hash
-    end
-    hash_sets = []; offset = 0
-    while offset < bytes
-      block = ''
-      block = IO.read(file, PART_BLOCK_BYTES, offset) while block.length == 0
-      hash_sets << OpenSSL::Digest::MD4.digest(block)
-      if debuging?
-        md4 = OpenSSL::Digest::MD4.hexdigest(block)
-        print "Block md4: #{md4} (offset: #{offset})"
-        puts "Block counts: #{hash_sets.length}"
+    else
+      hash_sets = []
+      Ed2k.walk_file(file, Ed2k::PART_BLOCK_BYTES) do |block|
+        hash_sets << OpenSSL::Digest::MD4.digest(block)
+        puts "#{hash_sets.length}:\t#{OpenSSL::Digest::MD4.hexdigest(block)}" if Ed2k.debuging?
       end
-      offset += PART_BLOCK_BYTES
+      hash = OpenSSL::Digest::MD4.hexdigest(hash_sets.join)
     end
-    hash = OpenSSL::Digest::MD4.hexdigest(hash_sets.join)
     return hash.upcase if args[1].has_key? :upcase and args[1][:upcase]
     return hash
   end
@@ -87,21 +82,18 @@ module Ed2k
     ''
   end
   
-  # hash a file to generate the AICH string in eMule
+  # generate the AICH string of a file in eMule
   def Ed2k.aich_file(*args)
     file = args[0]
-    raise ArgumentError, "file does not exists" unless File.exists?(file)
+    raise ArgumentError, "File does not exists" unless File.exists?(file)
     bytes = File.size(file)
-    puts "file has #{(bytes.to_f / AICH_BLOCK_BYTES).ceil} aich block(s)" if debuging?
-    offset = 0; hash_list = []
-    while offset < bytes
-      block = ''
-      block = IO.read(file, PART_BLOCK_BYTES, offset) while block.length == 0
-      hash_list << aich_one_part(block)
-      puts "hash_list has #{hash_list.length} part(s)" if debuging?
-      offset += PART_BLOCK_BYTES
+    puts "File has #{(bytes.to_f / Ed2k::AICH_BLOCK_BYTES).ceil} aich block(s)" if Ed2k.debuging?
+    hash_sets = []
+    Ed2k.walk_file(file, Ed2k::PART_BLOCK_BYTES) do |block|
+      hash_sets << Ed2k.aich_part(block)
+      puts "hash_sets has #{hash_sets.length} part(s)" if Ed2k.debuging?
     end
-    aich = base32_encode aich_hash_tree(hash_list)
+    aich = Ed2k.base32_encode Ed2k.aich_hashsets(hash_sets)
     return aich.upcase if args[1].has_key? :upcase and args[1][:upcase]
     return aich
   end
@@ -109,7 +101,7 @@ module Ed2k
   # generate the ed2k of the file
   def Ed2k.build_ed2k(*args)
     file = args[0]
-    hash = hash_file(file)
+    hash = Ed2k.hash_file(file)
     hash = hash.upcase if args[1].include? :upcase and args[1][:upcase]
     aich = aich_file(file)
     aich = aich.upcase if args[1].include? :upcase and args[1][:upcase]
@@ -118,52 +110,45 @@ module Ed2k
   
   private
   
-  def Ed2k.aich_one_leaf(leaf)
-    if leaf.length > AICH_BLOCK_BYTES
-      raise SystemCallError, "aich_one_leaf with error data larger than AICH_BLOCK_BYTES"
+  def Ed2k.aich_leaf(leaf)
+    if leaf.length > Ed2k::AICH_BLOCK_BYTES
+      raise SystemCallError, "Ed2k.aich_leaf with error data larger than Ed2k::AICH_BLOCK_BYTES"
     end
     return Digest::SHA1::digest(leaf)
   end
   
   #
-  def Ed2k.aich_two_leaf(leaf1, leaf2)
-    leaf1_sha1 = aich_one_leaf(leaf1)
-    leaf2_sha1 = aich_one_leaf(leaf2)
-    return aich_one_leaf(leaf1_sha1 + leaf2_sha1)
-  end
-  
-  #
-  def Ed2k.aich_hash_tree(hash_list)
-    return hash_list[0] if hash_list.length == 1
-    new_list = []
+  def Ed2k.aich_hashsets(hash_sets)
+    return hash_sets[0] if hash_sets.length == 1
+    new_sets = []
     last_leaf = nil
-    hash_list.each do |l|
+    hash_sets.each do |l|
       ( last_leaf = l; next ) unless last_leaf
-      new_list << aich_one_leaf(last_leaf + l)
+      new_sets << Ed2k.aich_leaf(last_leaf + l)
       last_leaf = nil
     end
-    new_list << last_leaf if last_leaf
-    return aich_hash_tree(new_list)
+    new_sets << last_leaf if last_leaf
+    return Ed2k.aich_hashsets(new_sets)
   end
   
   #
-  def Ed2k.aich_one_part(data)
-    if data.length > PART_BLOCK_BYTES
-      raise SystemCallError, 'aich one_part with data is larger than PART_BLOCK_BYTES'
+  def Ed2k.aich_part(data)
+    if data.length > Ed2k::PART_BLOCK_BYTES
+      raise SystemCallError, 'aich one_part with data is larger than Ed2k::PART_BLOCK_BYTES'
     end
-    offset = 0; last_aich = nil; hash_list = []
-    while offset < data.length
-      aich_data = data[offset, AICH_BLOCK_BYTES]
+    offset = 0; last_aich = nil; hash_sets = []
+    Ed2k.walk_string(data, Ed2k::AICH_BLOCK_BYTES) do |aich_data|
       if last_aich
-        hash_list << aich_two_leaf(last_aich, aich_data)
+        leaf1_sha1 = Ed2k.aich_leaf(last_aich)
+        leaf2_sha1 = Ed2k.aich_leaf(aich_data)
+        hash_sets << Ed2k.aich_leaf(leaf1_sha1 + leaf2_sha1)
         last_aich = nil
       else
         last_aich = aich_data
       end
-      offset += AICH_BLOCK_BYTES
     end
-    hash_list << aich_one_leaf(last_aich) if last_aich
-    return aich_hash_tree(hash_list)
+    hash_sets << Ed2k.aich_leaf(last_aich) if last_aich
+    return Ed2k.aich_hashsets(hash_sets)
   end
   
   #
@@ -191,6 +176,28 @@ module Ed2k
       output << BASE32_ALPHABET[stored_data]
     end
     output
+  end
+  
+  #
+  def Ed2k.walk_string(string, step, &block)
+    offset = 0
+    while offset < string.length
+      yield string[offset, step]
+      offset += step
+    end
+    yield '' if offset == string.length
+  end
+  
+  #
+  def Ed2k.walk_file(file, step, &block)
+    offset = 0
+    while offset < File.size(file)
+      block = ''
+      block = IO.read(file, step, offset)
+      yield block
+      offset += step
+    end
+    yield '' if offset == File.size(file)
   end
   
 end
