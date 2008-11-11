@@ -1,6 +1,7 @@
 require 'optparse'
-require File.expand_path(File.dirname(__FILE__)) + '/../spec/version.rb'
-require File.expand_path(File.dirname(__FILE__)) + '/ed2k/debug.rb'
+require 'pp'
+require File.dirname(__FILE__) + '/../spec/version.rb'
+require File.dirname(__FILE__) + '/ed2k/debug.rb'
 
 # inputed invalid args, puts msg and halt
 def invalid_args(msg)
@@ -14,18 +15,16 @@ $options = { :action => nil, :file => nil, :upcase => false, :debug => false }
 $opts = OptionParser.new do |o|
   o.banner  = "ed2k version #{Ed2k::VERSION}\n"
   o.banner += "Copyright MIT license by <xdanger@gmail.com>\n\n"
-  o.banner += "Usage: ed2k -a hash -f FILENAME\n"
-  o.banner += "  or   ed2k -a aich -f FILENAME\n"
-  o.banner += "  or   ed2k -a link -f FILENAME\n"
-  o.separator "\nCommon options:"
-  o.on('-a', '--action [ACTION]', [:hash, :aich, :link],
-       'Set action (hash, aich, link)') { |a| $options[:action] = a }
-  o.on('-f', '--file [FILE]', 'File to process') { |f| $options[:file] = f }
+  o.banner += "Usage: #{$0} [options] (hash|aich|link) FILENAME [FILENAME...]\n\n"
+  o.separator "Action options:"
+  o.separator "\thash - Hash file(s)"
+  o.separator "\tlink - Get the ed2k link of the file(s)\n"
+  o.separator "Common options:"
   o.on('-u', '--upcase', 'Return value is upcased') { $options[:upcase] = true }
-  o.separator "\nSpecific options:"
-  o.on_tail('-d', '--debug', 'Turn on debug mode') { $options[:debug] = true }
-  o.on_tail('-h', '--help', "Display detailed help and exit") { puts o; exit }
-  o.on_tail('-v', '--version', "Show version") { puts Ed2k::VERSION; exit }
+  o.on('-d', '--debug', 'Turn on debug mode') { $options[:debug] = true }
+  o.on('-h', '--help', "Display detailed help and exit") { puts o; exit }
+  o.on('-v', '--version', "Show version") { puts Ed2k::VERSION; exit }
+  
 end
 
 begin
@@ -37,5 +36,13 @@ rescue OptionParser::InvalidOption
   exit
 end
 
-invalid_args '-a --action is required' unless $options[:action]
-invalid_args '-f --file is required'   unless $options[:file]
+
+
+$action = ARGV.shift
+
+unless $action and ['hash', 'link'].include? $action
+  $stderr.puts "invalid action"
+  exit
+end
+  
+$files = ARGV

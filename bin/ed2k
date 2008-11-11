@@ -6,13 +6,13 @@ require 'args_parser'
 require 'ed2k'
 
 def main
-  case $options[:action]
-  when :hash
-    puts Ed2k.hash_file($options[:file], :upcase => $options[:upcase])
-  when :aich
-    puts Ed2k.aich_file($options[:file], :upcase => $options[:upcase])
-  when :link
-    puts Ed2k.build_ed2k($options[:file], :upcase => $options[:upcase])
+  case $action
+  when 'hash'
+    $files.each {|f| puts Ed2k.hash_file(f, :upcase => $options[:upcase]) }
+  when 'aich'
+    $files.each {|f| puts Ed2k.aich_file(f, :upcase => $options[:upcase]) }
+  when 'link'
+    $files.each {|f| puts Ed2k.build_ed2k(f, :upcase => $options[:upcase]) }
   end
 end
 
