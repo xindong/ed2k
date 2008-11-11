@@ -37,24 +37,6 @@ module Ed2k
   # and for each block a hash value is calculated using the SHA1 hash algorithm
   AICH_BLOCK_BYTES = 184320
   
-  # hash a given data by separating them into blocks
-  def Ed2k.hash(*args)
-    str = args[0]
-    return '' if str.length == 0
-    hash = ''
-    if str.length < Ed2k::PART_BLOCK_BYTES
-      hash = OpenSSL::Digest::MD4.hexdigest(str)
-    else
-      hash_sets = []
-      Ed2k.walk_string(str, Ed2k::PART_BLOCK_BYTES) do |block|
-        hash_sets << OpenSSL::Digest::MD4.digest(block)
-      end
-      hash = OpenSSL::Digest::MD4.hexdigest(hash_sets.join)
-    end
-    return hash.upcase if args[1].has_key? :upcase and args[:upcase]
-    return hash
-  end
-  
   # hash a file using IO.read function
   def Ed2k.hash_file(*args)
     file = args[0]
@@ -76,21 +58,16 @@ module Ed2k
     return hash
   end
   
-  # hash a given data to generate the AICH string in eMule
-  # NOT FINISHED
-  def Ed2k.aich(*args)
-    ''
-  end
-  
   # generate the AICH string of a file in eMule
   def Ed2k.aich_file(*args)
     file = args[0]
-    raise ArgumentError, "File does not exists" unless File.exists?(file)
+    raise ArgumentError, 'File does not exists' unless File.exists?(file)
     bytes = File.size(file)
     puts "File has #{(bytes.to_f / Ed2k::AICH_BLOCK_BYTES).ceil} aich block(s)" if Ed2k.debuging?
     hash_sets = []
     Ed2k.walk_file(file, Ed2k::PART_BLOCK_BYTES) do |block|
-      hash_sets << Ed2k.aich_part(block)
+      row = Ed2k.aich_part(block)
+      hash_sets << row if row
       puts "hash_sets has #{hash_sets.length} part(s)" if Ed2k.debuging?
     end
     aich = Ed2k.base32_encode Ed2k.aich_hashsets(hash_sets)
@@ -119,6 +96,7 @@ module Ed2k
   
   #
   def Ed2k.aich_hashsets(hash_sets)
+    raise SystemCallError, "hash_sets.length = 0" if hash_sets.length == 0
     return hash_sets[0] if hash_sets.length == 1
     new_sets = []
     last_leaf = nil
@@ -134,7 +112,7 @@ module Ed2k
   #
   def Ed2k.aich_part(data)
     if data.length > Ed2k::PART_BLOCK_BYTES
-      raise SystemCallError, 'aich one_part with data is larger than Ed2k::PART_BLOCK_BYTES'
+      raise SystemCallError, 'Ed2k.one_part with data is larger than Ed2k::PART_BLOCK_BYTES'
     end
     offset = 0; last_aich = nil; hash_sets = []
     Ed2k.walk_string(data, Ed2k::AICH_BLOCK_BYTES) do |aich_data|
@@ -148,6 +126,7 @@ module Ed2k
       end
     end
     hash_sets << Ed2k.aich_leaf(last_aich) if last_aich
+    return Ed2k.aich_leaf('') if hash_sets.length == 0
     return Ed2k.aich_hashsets(hash_sets)
   end
   
@@ -185,7 +164,6 @@ module Ed2k
       yield string[offset, step]
       offset += step
     end
-    yield '' if offset == string.length
   end
   
   #
