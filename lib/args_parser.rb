@@ -23,26 +23,22 @@ $opts = OptionParser.new do |o|
   o.on('-u', '--upcase', 'Return value is upcased') { $options[:upcase] = true }
   o.on('-d', '--debug', 'Turn on debug mode') { $options[:debug] = true }
   o.on('-h', '--help', "Display detailed help and exit") { puts o; exit }
-  o.on('-v', '--version', "Show version") { puts Ed2k::VERSION; exit }
-  
+  o.on('-v', '--version', "Show version") { puts Ed2k::VERSION; exit }  
+end
+
+def invalid_args
+  $stderr.puts "Invalid Arguments"
+  $stderr.puts ""
+  puts $opts
+  exit
 end
 
 begin
   $opts.parse!(ARGV)
 rescue OptionParser::InvalidOption
-  puts "INVALID ARGS"
-  puts ""
-  puts $opts
-  exit
+  invalid_args
 end
-
-
 
 $action = ARGV.shift
-
-unless $action and ['hash', 'link'].include? $action
-  $stderr.puts "invalid action"
-  exit
-end
-  
+invalid_args unless $action and ['hash', 'link'].include? $action
 $files = ARGV
