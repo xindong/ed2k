@@ -77,11 +77,8 @@ module Ed2k
   
   # generate the ed2k of the file
   def Ed2k.build_ed2k(*args)
-    file = args[0]
-    hash = Ed2k.hash_file(file)
-    hash = hash.upcase if args[1].include? :upcase and args[1][:upcase]
-    aich = aich_file(file)
-    aich = aich.upcase if args[1].include? :upcase and args[1][:upcase]
+    hash = Ed2k.hash_file(args)
+    aich = Ed2k.aich_file(args)
     "ed2k://|#{CGI::escape(File.basename(file))}|#{File.size(file)}|#{hash}|h=#{aich}|/"
   end
   
