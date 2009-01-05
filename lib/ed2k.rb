@@ -80,7 +80,7 @@ module Ed2k
     file = args[0]
     hash = Ed2k.hash_file(args[0], :upcase => args[1][:upcase])
 #    aich = Ed2k.aich_file(args[0], :upcase => args[1][:upcase])
-    "ed2k://|#{CGI::escape(File.basename(file))}|#{File.size(file)}|#{hash}|/"
+    "ed2k://|file|#{CGI::escape(File.basename(file))}|#{File.size(file)}|#{hash}|/"
   end
   
   private
