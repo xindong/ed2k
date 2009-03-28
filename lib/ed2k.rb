@@ -37,6 +37,27 @@ module Ed2k
   # and for each block a hash value is calculated using the SHA1 hash algorithm
   AICH_BLOCK_BYTES = 184320
   
+  # md5sum a file
+  def Ed2k.md5s_file(*args)
+    file = args[0]
+    raise ArgumentError, "File does not exists" unless File.exists?(file)
+    bytes = File.size(file)
+    puts "File size is #{bytes}" if Ed2k.debuging?
+    hash = ''
+    if File.size(file) < Ed2k::PART_BLOCK_BYTES
+      hash = OpenSSL::Digest::MD5.hexdigest(File.read(file))
+    else
+      hash = File.open(file, 'rb') do |io|
+        dig = Digest::MD5.new
+        buf = ''
+        dig.update(buf) while io.read(Ed2k::PART_BLOCK_BYTES, buf)
+        return dig.to_s
+      end
+    end
+    return hash.upcase if args[1].has_key? :upcase and args[1][:upcase]
+    return hash
+  end
+  
   # hash a file using IO.read function
   def Ed2k.hash_file(*args)
     file = args[0]

@@ -31,7 +31,18 @@ def cyan_bg(text)   ; colorize(text, "\e[46m"); end
 
 passed, failed = [0, 0]
 Ed2k::UNITTEST_DEST.each do |file|
-  bytes, hash, aich = file['size'].to_s, file['hash'].upcase, file['aich'].upcase
+  bytes, md5s, hash, aich = file['size'].to_s, file['md5s'], file['hash'], file['aich']
+  _md5s = Ed2k.md5s_file("#{$root_dir}/test/data/#{bytes}-bytes", { :debug => false, :upcase => true })
+  _md5s = _md5s.upcase.strip
+  if md5s != _md5s
+    failed += 1
+    $stderr.puts "MD5S file\t#{yellow_text(bytes + '-bytes' )}\t\t[ #{red_text('Failed')} ]"
+    $stderr.puts "\tDeserved: #{cyan_text(md5s)}"
+    $stderr.puts "\tReturned: #{magenta_text(_md5s)}"
+  else
+    passed += 1
+    $stderr.puts "MD5S file\t#{yellow_text(bytes + '-bytes' )}\t\t[   #{green_text('OK')}   ]"
+  end
 #  _hash = `#{$root_dir}/bin/ed2k -a hash -uf #{$root_dir}/test/data/#{bytes}-bytes`
   _hash = Ed2k.hash_file("#{$root_dir}/test/data/#{bytes}-bytes", { :debug => false, :upcase => true })
   _hash = _hash.upcase.strip

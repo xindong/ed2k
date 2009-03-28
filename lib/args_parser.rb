@@ -15,7 +15,7 @@ $options = { :action => nil, :file => nil, :upcase => false, :debug => false }
 $opts = OptionParser.new do |o|
   o.banner  = "ed2k version #{Ed2k::VERSION}\n"
   o.banner += "Copyright MIT license by <xdanger@gmail.com>\n\n"
-  o.banner += "Usage: #{$0} [options] (hash|aich|link) FILENAME [FILENAME...]\n\n"
+  o.banner += "Usage: #{$0} [options] (md5s|hash|aich|link) FILENAME [FILENAME...]\n\n"
   o.separator "Action options:"
   o.separator "\thash - Hash file(s)"
   o.separator "\tlink - Get the ed2k link of the file(s)\n"
@@ -40,5 +40,5 @@ rescue OptionParser::InvalidOption
 end
 
 $action = ARGV.shift
-invalid_args unless $action and ['hash', 'link'].include? $action
+invalid_args unless $action and ['md5s', 'hash', 'link'].include? $action
 $files = ARGV

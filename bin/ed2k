@@ -11,6 +11,8 @@ def main
     $files.each {|f| puts Ed2k.hash_file(f, :upcase => $options[:upcase]) }
   when 'aich'
     $files.each {|f| puts Ed2k.aich_file(f, :upcase => $options[:upcase]) }
+  when 'md5s'
+    $files.each {|f| puts Ed2k.md5s_file(f, :upcase => $options[:upcase]) }
   when 'link'
     $files.each {|f| puts Ed2k.build_ed2k(f, :upcase => $options[:upcase]) }
   end
